@@ -154,4 +154,3 @@ func (s *SchedulerTestSuite) TestNoStartAfterClose() {
 
 	s.Equal(int32(0), count.Load(), "Scheduler should not start after close")
 }
-

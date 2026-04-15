@@ -12,4 +12,3 @@ type IScheduler interface {
 	Stop(ctx context.Context) <-chan struct{}
 	Close() error
 }
-
