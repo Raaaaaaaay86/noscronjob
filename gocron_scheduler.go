@@ -2,12 +2,14 @@ package noscronjob
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/xerrors"
 )
 
@@ -55,8 +57,17 @@ func (s *GoCronScheduler) RegisterIntervalJob(name string, interval time.Duratio
 	_, err := s.scheduler.NewJob(
 		gocron.DurationJob(interval),
 		gocron.NewTask(func(ctx context.Context) {
+			if s.config.TracerProvider != nil {
+				tctx, span := s.withTracedContext(ctx, name)
+				defer span.End()
+
+				ctx = tctx
+			}
+
 			c := NewContext(ctx, handler)
+
 			c.Next()
+
 			if err := c.Err(); err != nil {
 				slog.Error("job failed", "name", name, "interval", interval.String(), "error", err)
 			}
@@ -67,6 +78,12 @@ func (s *GoCronScheduler) RegisterIntervalJob(name string, interval time.Duratio
 		return xerrors.Errorf("failed to register interval(%s) job: %w", interval.String(), err)
 	}
 	return nil
+}
+
+func (s *GoCronScheduler) withTracedContext(ctx context.Context, jobName string) (context.Context, trace.Span) {
+	tctx, span := s.config.TracerProvider.Tracer(TRACER_NAME).Start(ctx, fmt.Sprintf("cronjob.gocron.%s", jobName))
+
+	return tctx, span
 }
 
 func (s *GoCronScheduler) Start(ctx context.Context) {

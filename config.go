@@ -1,9 +1,14 @@
 package noscronjob
 
-import "time"
+import (
+	"time"
+
+	"go.opentelemetry.io/otel/trace"
+)
 
 type Config struct {
 	MaximumStopTime time.Duration
+	TracerProvider  trace.TracerProvider
 }
 
 func (c Config) GetMaximumStopTime() time.Duration {
