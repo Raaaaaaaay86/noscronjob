@@ -6,8 +6,8 @@ import (
 )
 
 type IScheduler interface {
-	RegisterCronJob(name string, expression string, handler ...HandlerFunc) error
-	RegisterIntervalJob(name string, interval time.Duration, handler ...HandlerFunc) error
+	RegisterCronJob(expression string, handler ...HandlerFunc) error
+	RegisterIntervalJob(interval time.Duration, handler ...HandlerFunc) error
 	Start(ctx context.Context)
 	Stop(ctx context.Context) <-chan struct{}
 	Close() error

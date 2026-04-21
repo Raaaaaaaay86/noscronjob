@@ -35,12 +35,30 @@ func NewGoCronScheduler(config Config, options ...gocron.SchedulerOption) (*GoCr
 	}, nil
 }
 
-func (s *GoCronScheduler) RegisterCronJob(name string, expression string, handler ...HandlerFunc) error {
+func (s *GoCronScheduler) RegisterCronJob(expression string, handlers ...HandlerFunc) error {
+	if len(handlers) == 0 {
+		return nil
+	}
+
+	name, ok := getHandlerName(handlers[len(handlers)-1])
+	if !ok {
+		name = fmt.Sprintf("noname:%d", time.Now().UnixMicro())
+	}
+
 	_, err := s.scheduler.NewJob(
 		gocron.CronJob(expression, true),
 		gocron.NewTask(func(ctx context.Context) {
-			c := NewContext(ctx, handler)
+			if s.config.TracerProvider != nil {
+				tctx, span := s.withTracedContext(ctx, name)
+				defer span.End()
+
+				ctx = tctx
+			}
+
+			c := NewContext(ctx, handlers)
+
 			c.Next()
+
 			if err := c.Err(); err != nil {
 				slog.Error("job failed", "name", name, "expression", expression, "error", err)
 			}
@@ -53,7 +71,16 @@ func (s *GoCronScheduler) RegisterCronJob(name string, expression string, handle
 	return nil
 }
 
-func (s *GoCronScheduler) RegisterIntervalJob(name string, interval time.Duration, handler ...HandlerFunc) error {
+func (s *GoCronScheduler) RegisterIntervalJob(interval time.Duration, handlers ...HandlerFunc) error {
+	if len(handlers) == 0 {
+		return nil
+	}
+
+	name, ok := getHandlerName(handlers[len(handlers)-1])
+	if !ok {
+		name = fmt.Sprintf("noname:%d", time.Now().UnixMicro( ))
+	}
+
 	_, err := s.scheduler.NewJob(
 		gocron.DurationJob(interval),
 		gocron.NewTask(func(ctx context.Context) {
@@ -64,7 +91,7 @@ func (s *GoCronScheduler) RegisterIntervalJob(name string, interval time.Duratio
 				ctx = tctx
 			}
 
-			c := NewContext(ctx, handler)
+			c := NewContext(ctx, handlers)
 
 			c.Next()
 
