@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func GetHandlerName(handler HandlerFunc) (string, bool) {
+func getHandlerName(handler HandlerFunc) (string, bool) {
 	ptr := reflect.ValueOf(handler).Pointer()
 	handlerName := runtime.FuncForPC(ptr).Name()
 
