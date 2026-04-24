@@ -15,7 +15,7 @@ import (
 
 type IScheduler interface {
 	// RegisterCronJob registers job by using 6-digits cron expression which support to seconds.
-	// 
+	//
 	// cron expression parser: https://crontab.cronhub.io/
 	RegisterCronJob(expression string, opts []gocron.JobOption, handler ...HandlerFunc) error
 	// RegisterIntervalJob register job by using time.Duration.
@@ -145,12 +145,10 @@ func (s *GoCronScheduler) Start(ctx context.Context) {
 
 	s.scheduler.Start()
 	go func() {
-		select {
-		case <-ctx.Done():
-			sctx, cancel := context.WithTimeout(context.Background(), s.config.GetMaximumStopTime())
-			defer cancel()
-			_ = s.Stop(sctx)
-		}
+		<-ctx.Done()
+		sctx, cancel := context.WithTimeout(context.Background(), s.config.GetMaximumStopTime())
+		defer cancel()
+		_ = s.Stop(sctx)
 	}()
 }
 
