@@ -1,8 +1,14 @@
-# noscronjob
+<h1 align="center"> noscronjob </h1>
 
-`noscronjob` wraps [gocron v2](https://github.com/go-co-op/gocron) and extends it with a gin-style middleware chain so you can attach multiple handler functions (e.g. logging, tracing, error recovery) to each scheduled job.
+<p>
+noscronjob wraps <a href="https://github.com/go-co-op/gocron">gocron v2</a> and extends it with a gin-style middleware chain so you can attach multiple handler functions (e.g. logging, tracing, error recovery) to each scheduled job.
+</p>
 
-## Installation
+<p align="center">
+  <a href="README.zh-TW.md">中文</a>
+</p>
+
+## Install
 
 ```bash
 go get github.com/raaaaaaaay86/noscronjob
@@ -33,8 +39,8 @@ func main() {
 
     // Run every day at 02:00
     if err := scheduler.RegisterCronJob(
-        "daily-report",
         "0 2 * * *",
+        nil,
         generateDailyReport,
     ); err != nil {
         panic(err)
@@ -57,8 +63,8 @@ func generateDailyReport(ctx *noscronjob.Context) {
 
 ```go
 if err := scheduler.RegisterIntervalJob(
-    "cache-warmer",
     5 * time.Minute,
+    nil,
     warmCache,
 ); err != nil {
     panic(err)
@@ -92,8 +98,8 @@ func actualJob(ctx *noscronjob.Context) {
 }
 
 scheduler.RegisterIntervalJob(
-    "my-job",
     10 * time.Second,
+    nil,
     loggingMiddleware, recoveryMiddleware, actualJob,
 )
 ```
@@ -159,8 +165,8 @@ scheduler, err := noscronjob.NewGoCronScheduler(
 
 | Method                                             | Description                                                               |
 |----------------------------------------------------|---------------------------------------------------------------------------|
-| `RegisterCronJob(name, expression, handlers...)`   | Register a job with a cron expression (seconds-included format)           |
-| `RegisterIntervalJob(name, interval, handlers...)` | Register a job that runs every `interval`                                 |
+| `RegisterCronJob(expression, opts, handlers...)`   | Register a job with a cron expression (seconds-included format)           |
+| `RegisterIntervalJob(interval, opts, handlers...)` | Register a job that runs every `interval`                                 |
 | `Start(ctx)`                                       | Start the scheduler; auto-stops when `ctx` is cancelled                   |
 | `Stop(ctx) <-chan struct{}`                        | Stop running jobs; returns a channel that closes when all jobs finish     |
 | `Close()`                                          | Shut down the scheduler entirely                                          |

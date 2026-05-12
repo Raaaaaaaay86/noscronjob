@@ -1,6 +1,12 @@
-# noscronjob
+<h1 align="center"> noscronjob </h1>
 
-`noscronjob` 封裝了 [gocron v2](https://github.com/go-co-op/gocron)，並擴充了類似 gin 的 middleware chain，讓你可以為每個排程任務附加多個 handler 函式（例如日誌、追蹤、錯誤恢復）。
+<p>
+noscronjob 封裝了 <a href="https://github.com/go-co-op/gocron">gocron v2</a>，並擴充了類似 gin 的 middleware chain，讓你可以為每個排程任務附加多個 handler 函式（例如日誌、追蹤、錯誤恢復）。
+</p>
+
+<p align="center">
+  <a href="README.md">English</a>
+</p>
 
 ## 安裝
 
@@ -33,8 +39,8 @@ func main() {
 
     // 每天凌晨 02:00 執行
     if err := scheduler.RegisterCronJob(
-        "daily-report",
         "0 2 * * *",
+        nil,
         generateDailyReport,
     ); err != nil {
         panic(err)
@@ -57,8 +63,8 @@ func generateDailyReport(ctx *noscronjob.Context) {
 
 ```go
 if err := scheduler.RegisterIntervalJob(
-    "cache-warmer",
     5 * time.Minute,
+    nil,
     warmCache,
 ); err != nil {
     panic(err)
@@ -92,8 +98,8 @@ func actualJob(ctx *noscronjob.Context) {
 }
 
 scheduler.RegisterIntervalJob(
-    "my-job",
     10 * time.Second,
+    nil,
     loggingMiddleware, recoveryMiddleware, actualJob,
 )
 ```
@@ -159,8 +165,8 @@ scheduler, err := noscronjob.NewGoCronScheduler(
 
 | 方法                                               | 說明                                                       |
 |----------------------------------------------------|------------------------------------------------------------|
-| `RegisterCronJob(name, expression, handlers...)`   | 以 cron 表達式（含秒格式）註冊任務                         |
-| `RegisterIntervalJob(name, interval, handlers...)` | 以固定間隔執行的任務                                       |
+| `RegisterCronJob(expression, opts, handlers...)`   | 以 cron 表達式（含秒格式）註冊任務                         |
+| `RegisterIntervalJob(interval, opts, handlers...)` | 以固定間隔執行的任務                                       |
 | `Start(ctx)`                                       | 啟動 scheduler；context 取消時自動停止                     |
 | `Stop(ctx) <-chan struct{}`                        | 停止執行中的任務；回傳一個 channel，所有任務完成時關閉     |
 | `Close()`                                          | 完全關閉 scheduler                                         |
